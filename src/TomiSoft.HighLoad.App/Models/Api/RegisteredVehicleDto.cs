@@ -10,6 +10,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace TomiSoft.HighLoad.App.Models.Api {
     /// <summary>
@@ -24,6 +25,7 @@ namespace TomiSoft.HighLoad.App.Models.Api {
         [Required]
 
         [DataMember(Name = "uuid")]
+        [JsonPropertyName("uuid")]
         public required Guid? Uuid { get; set; }
 
         /// <summary>
@@ -34,6 +36,7 @@ namespace TomiSoft.HighLoad.App.Models.Api {
 
         [StringLength(20, MinimumLength = 1)]
         [DataMember(Name = "rendszam")]
+        [JsonPropertyName("rendszam")]
         public required string Rendszam { get; set; }
 
         /// <summary>
@@ -44,6 +47,7 @@ namespace TomiSoft.HighLoad.App.Models.Api {
 
         [StringLength(200, MinimumLength = 1)]
         [DataMember(Name = "tulajdonos")]
+        [JsonPropertyName("tulajdonos")]
         public required string Tulajdonos { get; set; }
 
         /// <summary>
@@ -53,6 +57,7 @@ namespace TomiSoft.HighLoad.App.Models.Api {
         [Required]
 
         [DataMember(Name = "forgalmi_ervenyes")]
+        [JsonPropertyName("forgalmi_ervenyes")]
         public required DateOnly? ForgalmiErvenyes { get; set; }
 
         /// <summary>
@@ -62,6 +67,7 @@ namespace TomiSoft.HighLoad.App.Models.Api {
         [Required]
 
         [DataMember(Name = "adatok")]
+        [JsonPropertyName("adatok")]
         public required List<string> Adatok { get; set; }
 
         /// <summary>
