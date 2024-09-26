@@ -32,7 +32,7 @@ namespace TomiSoft.HighLoad.App.Models.Api {
         /// </summary>
         /// <param name="obj">Object to be compared</param>
         /// <returns>Boolean</returns>
-        public override bool Equals(object obj) {
+        public override bool Equals(object? obj) {
             if (ReferenceEquals(null, obj))
                 return false;
             if (ReferenceEquals(this, obj))
@@ -45,7 +45,7 @@ namespace TomiSoft.HighLoad.App.Models.Api {
         /// </summary>
         /// <param name="other">Instance of SearchVehicleResultDto to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(SearchVehicleResultDto other) {
+        public bool Equals(SearchVehicleResultDto? other) {
             if (ReferenceEquals(null, other))
                 return false;
             if (ReferenceEquals(this, other))

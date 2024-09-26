@@ -25,7 +25,7 @@ namespace TomiSoft.HighLoad.App.Models.Api {
 
         [StringLength(20, MinimumLength = 1)]
         [DataMember(Name = "rendszam")]
-        public string Rendszam { get; set; }
+        public required string Rendszam { get; set; }
 
         /// <summary>
         /// Vehicle owner
@@ -35,7 +35,7 @@ namespace TomiSoft.HighLoad.App.Models.Api {
 
         [StringLength(200, MinimumLength = 1)]
         [DataMember(Name = "tulajdonos")]
-        public string Tulajdonos { get; set; }
+        public required string Tulajdonos { get; set; }
 
         /// <summary>
         /// Validity of traffic permit
@@ -44,7 +44,7 @@ namespace TomiSoft.HighLoad.App.Models.Api {
         [Required]
 
         [DataMember(Name = "forgalmi_ervenyes")]
-        public DateTime? ForgalmiErvenyes { get; set; }
+        public required DateOnly? ForgalmiErvenyes { get; set; }
 
         /// <summary>
         /// Additional information
@@ -53,7 +53,7 @@ namespace TomiSoft.HighLoad.App.Models.Api {
         [Required]
 
         [DataMember(Name = "adatok")]
-        public List<string> Adatok { get; set; }
+        public required List<string> Adatok { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -75,7 +75,7 @@ namespace TomiSoft.HighLoad.App.Models.Api {
         /// </summary>
         /// <param name="obj">Object to be compared</param>
         /// <returns>Boolean</returns>
-        public override bool Equals(object obj) {
+        public override bool Equals(object? obj) {
             if (ReferenceEquals(null, obj))
                 return false;
             if (ReferenceEquals(this, obj))
@@ -88,7 +88,7 @@ namespace TomiSoft.HighLoad.App.Models.Api {
         /// </summary>
         /// <param name="other">Instance of RegisterVehicleRequestDto to be compared</param>
         /// <returns>Boolean</returns>
-        public bool Equals(RegisterVehicleRequestDto other) {
+        public bool Equals(RegisterVehicleRequestDto? other) {
             if (ReferenceEquals(null, other))
                 return false;
             if (ReferenceEquals(this, other))

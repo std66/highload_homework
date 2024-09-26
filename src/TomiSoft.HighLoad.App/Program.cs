@@ -54,7 +54,7 @@ app.Run();
 RegisteredVehicleDto GetTestData() {
     return new RegisteredVehicleDto() {
         Uuid = Guid.NewGuid(),
-        ForgalmiErvenyes = new DateTime(2025, 02, 01),
+        ForgalmiErvenyes = new DateOnly(2025, 02, 01),
         Rendszam = "ABC123",
         Tulajdonos = "Kiss István",
         Adatok = ["teszt1", "teszt2"]

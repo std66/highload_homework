@@ -1,5 +1,0 @@
-@TomiSoft.HighLoad.App_HostAddress = http://localhost:5130
-
-GET {{TomiSoft.HighLoad.App_HostAddress}}/healthz/
-Accept: application/json
-
