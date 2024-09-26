@@ -1,11 +1,5 @@
 @TomiSoft.HighLoad.App_HostAddress = http://localhost:5130
 
-GET {{TomiSoft.HighLoad.App_HostAddress}}/todos/
+GET {{TomiSoft.HighLoad.App_HostAddress}}/healthz/
 Accept: application/json
 
-###
-
-GET {{TomiSoft.HighLoad.App_HostAddress}}/todos/1
-Accept: application/json
-
-###
