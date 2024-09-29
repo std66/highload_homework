@@ -1,12 +1,19 @@
+using Npgsql;
 using System.Net;
 using System.Text.Json;
 using TomiSoft.HighLoad.App;
+using TomiSoft.HighLoad.App.DataPersistence;
 using TomiSoft.HighLoad.App.Models.Api;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
 builder.Services
     .AddLogging()
+    .AddScoped<NpgsqlConnection>(sp => {
+        var connectionString = builder.Configuration.GetConnectionString("postgres");
+        return new NpgsqlConnection(connectionString);
+    })
+    .AddScoped<VehicleDataManager>()
     .ConfigureHttpJsonOptions(options => {
         options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
     });

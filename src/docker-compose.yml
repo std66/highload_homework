@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: postgres
+    container_name: postgres
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./.containers/vehicle-db:/var/lib/postgresql/data
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: a@a.com
+      PGADMIN_DEFAULT_PASSWORD: password
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+  tomisoft.highload.app:
+    image: ${DOCKER_REGISTRY-}tomisofthighloadapp
+    build:
+      context: .
+      dockerfile: TomiSoft.HighLoad.App/Dockerfile
+    depends_on:
+      - postgres

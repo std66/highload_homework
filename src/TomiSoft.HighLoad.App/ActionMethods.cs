@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using TomiSoft.HighLoad.App.DataPersistence;
 using TomiSoft.HighLoad.App.Models.Api;
 
 namespace TomiSoft.HighLoad.App;
@@ -7,8 +8,9 @@ namespace TomiSoft.HighLoad.App;
 public static class ActionMethods {
     public static string Healthz() => "healthy";
 
-    public static IResult RegisterVehicle() {
-        return Results.Created();
+    public static async Task<IResult> RegisterVehicle(RegisterVehicleRequestDto request, [FromServices] VehicleDataManager dataManager) {
+        Guid id = await dataManager.RegisterVehicleAsync(request);
+        return Results.Created($"/jarmuvek/{id}", null);
     }
 
     public static string GetCountOfRegisteredVehicles() => "0";
