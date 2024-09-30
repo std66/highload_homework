@@ -13,7 +13,7 @@ public static class ActionMethods {
         return Results.Created($"/jarmuvek/{id}", null);
     }
 
-    public static string GetCountOfRegisteredVehicles() => "0";
+    public static async Task<string> GetCountOfRegisteredVehicles([FromServices] VehicleDataManager dataManager) => (await dataManager.GetCountOfVehiclesAsync()).ToString();
 
     public static async Task<IResult> GetVehicleById([Required] Guid uuid, [FromServices] VehicleDataManager dataManager) {
         RegisteredVehicleDto? result = await dataManager.GetVehicleById(uuid);
@@ -39,7 +39,7 @@ public static class ActionMethods {
         };
     }
 
-    public static void RegisterEndpoints(this WebApplication app) {
+    public static void AddVehicleApiServer(this WebApplication app) {
         app.MapGet("/healthz", ActionMethods.Healthz);
 
         app.MapPost("/jarmuvek", ActionMethods.RegisterVehicle);

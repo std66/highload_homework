@@ -13,7 +13,7 @@ public class VehicleDataManager {
     }
 
     public async Task<Guid> RegisterVehicleAsync(RegisterVehicleRequestDto registerRequest) {
-        await VerifyConnection();
+        await VerifyConnectionAsync();
 
         Guid id = Guid.NewGuid();
 
@@ -33,18 +33,34 @@ public class VehicleDataManager {
             throw;
         }
 
+        await connection.CloseAsync();
+
         return id;
     }
 
-    private async Task VerifyConnection() {
-        // Ellenőrizzük, hogy meg van-e nyitva a kapcsolat
-        if (connection.State != System.Data.ConnectionState.Open) {
-            await connection.OpenAsync();
+    public async Task<int> GetCountOfVehiclesAsync() {
+        await VerifyConnectionAsync();
+
+        const string query = "SELECT COUNT(*) FROM jarmu";
+        await using var command = new NpgsqlCommand(query, connection);
+
+        var count = (await command.ExecuteScalarAsync()) as int?;
+
+        await connection.CloseAsync();
+
+        return count ?? 0;
+    }
+
+    private async Task VerifyConnectionAsync() {
+        if (connection.State == System.Data.ConnectionState.Open) {
+            return;
         }
+
+        await connection.OpenAsync();
     }
 
     public async Task<RegisteredVehicleDto?> GetVehicleById(Guid id) {
-        await VerifyConnection();
+        await VerifyConnectionAsync();
 
         const string query = @"
             SELECT 
@@ -74,7 +90,6 @@ public class VehicleDataManager {
             Rendszam = reader.GetString(1),
             Tulajdonos = reader.GetString(2),
             ForgalmiErvenyes = DateOnly.FromDateTime(reader.GetDateTime(3)),
-            // A json array-t List<string>-é alakítjuk
             Adatok = JsonSerializer.Deserialize(reader.GetString(4), AppJsonSerializerContext.Default.ListString) ?? []
         };
 

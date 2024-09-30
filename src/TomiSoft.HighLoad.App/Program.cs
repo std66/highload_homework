@@ -25,6 +25,8 @@ app.Use(async (context, next) => {
         await next(context);
     }
     catch (Exception e) {
+        context.Response.Headers.ContentType = "application/json";
+
         context.Response.StatusCode = e switch {
             BadHttpRequestException => (int)HttpStatusCode.BadRequest,
             _ => (int)HttpStatusCode.InternalServerError
@@ -36,6 +38,6 @@ app.Use(async (context, next) => {
     }
 });
 
-app.RegisterEndpoints();
+app.AddVehicleApiServer();
 
 app.Run();
