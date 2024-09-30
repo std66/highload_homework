@@ -7,6 +7,7 @@
     <ProjectGuid>4de9ab9b-e9cf-4421-ade6-f3f4a77edd2d</ProjectGuid>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="db-init.sql" />
     <None Include="docker-compose.override.yml">
       <DependentUpon>docker-compose.yml</DependentUpon>
     </None>

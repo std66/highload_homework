@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./.containers/vehicle-db:/var/lib/postgresql/data
+      - ./db-init.sql:/docker-entrypoint-initdb.d/init.sql
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
