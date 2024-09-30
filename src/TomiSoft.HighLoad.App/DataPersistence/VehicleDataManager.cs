@@ -1,5 +1,6 @@
 ﻿using Npgsql;
 using System.Text;
+using System.Text.Json;
 using TomiSoft.HighLoad.App.Models.Api;
 
 namespace TomiSoft.HighLoad.App.DataPersistence;
@@ -12,10 +13,7 @@ public class VehicleDataManager {
     }
 
     public async Task<Guid> RegisterVehicleAsync(RegisterVehicleRequestDto registerRequest) {
-        // Ellenőrizzük, hogy meg van-e nyitva a kapcsolat
-        if (connection.State != System.Data.ConnectionState.Open) {
-            await connection.OpenAsync();
-        }
+        await VerifyConnection();
 
         Guid id = Guid.NewGuid();
 
@@ -36,6 +34,53 @@ public class VehicleDataManager {
         }
 
         return id;
+    }
+
+    private async Task VerifyConnection() {
+        // Ellenőrizzük, hogy meg van-e nyitva a kapcsolat
+        if (connection.State != System.Data.ConnectionState.Open) {
+            await connection.OpenAsync();
+        }
+    }
+
+    public async Task<RegisteredVehicleDto?> GetVehicleById(Guid id) {
+        await VerifyConnection();
+
+        const string query = @"
+            SELECT 
+                j.uuid, 
+                j.rendszam, 
+                j.tulajdonos, 
+                j.forgalmi_ervenyes, 
+                COALESCE(json_agg(a.adat), '[]'::json) AS adatok
+            FROM jarmu j
+            LEFT JOIN adatok a ON j.uuid = a.uuid
+            WHERE j.uuid = @uuid
+            GROUP BY j.uuid
+        ";
+
+        await using var command = new NpgsqlCommand(query, connection);
+        command.Parameters.AddWithValue("uuid", id);
+
+        await using var reader = await command.ExecuteReaderAsync();
+
+        if (!await reader.ReadAsync()) {
+            await connection.CloseAsync();
+            return null; // Nincs ilyen jármű
+        }
+
+        var registeredVehicle = new RegisteredVehicleDto {
+            Uuid = reader.GetGuid(0),
+            Rendszam = reader.GetString(1),
+            Tulajdonos = reader.GetString(2),
+            ForgalmiErvenyes = DateOnly.FromDateTime(reader.GetDateTime(3)),
+            // A json array-t List<string>-é alakítjuk
+            Adatok = JsonSerializer.Deserialize(reader.GetString(4), AppJsonSerializerContext.Default.ListString) ?? []
+        };
+
+        await connection.CloseAsync();
+
+        return registeredVehicle;
     }
 
     private async Task InsertVehicleData(RegisterVehicleRequestDto registerRequest, Guid id, NpgsqlTransaction transaction) {

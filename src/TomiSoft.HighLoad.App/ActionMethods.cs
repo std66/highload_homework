@@ -15,8 +15,12 @@ public static class ActionMethods {
 
     public static string GetCountOfRegisteredVehicles() => "0";
 
-    public static RegisteredVehicleDto GetVehicleById(string uuid) {
-        return GetTestData();
+    public static async Task<IResult> GetVehicleById([Required] Guid uuid, [FromServices] VehicleDataManager dataManager) {
+        RegisteredVehicleDto? result = await dataManager.GetVehicleById(uuid);
+        if (result is null)
+            return Results.NotFound();
+
+        return Results.Ok(result);
     }
 
     public static SearchVehicleResultDto SearchVehicle([FromQuery, Required] string q) {
