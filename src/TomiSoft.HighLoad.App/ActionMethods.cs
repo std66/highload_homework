@@ -23,10 +23,11 @@ public static class ActionMethods {
         return Results.Ok(result);
     }
 
-    public static SearchVehicleResultDto SearchVehicle([FromQuery, Required] string q) {
-        return new SearchVehicleResultDto() {
-            GetTestData()
-        };
+    public static async Task<IResult> SearchVehicle([FromQuery, Required] string q, [FromServices] VehicleDataManager dataManager) {
+        if (string.IsNullOrEmpty(q))
+            return Results.BadRequest();
+
+        return Results.Ok(await dataManager.SearchVehicle(q));
     }
 
     private static RegisteredVehicleDto GetTestData() {

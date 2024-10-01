@@ -4,7 +4,8 @@ CREATE TABLE jarmu (
     uuid UUID PRIMARY KEY,
     rendszam VARCHAR(20) NOT NULL UNIQUE,
     tulajdonos VARCHAR(200) NOT NULL,
-    forgalmi_ervenyes DATE NOT NULL
+    forgalmi_ervenyes DATE NOT NULL,
+    eredeti_adatok JSON
 );
 
 CREATE TABLE adatok (
