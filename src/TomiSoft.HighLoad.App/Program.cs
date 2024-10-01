@@ -8,7 +8,7 @@ using TomiSoft.HighLoad.App.Models.Api;
 var builder = WebApplication.CreateSlimBuilder(args);
 
 builder.Services
-    .AddLogging()
+    .AddLogging(x => x.AddSimpleConsole(options => options.SingleLine = true))
     .AddScoped<NpgsqlConnection>(sp => {
         var connectionString = builder.Configuration.GetConnectionString("postgres");
         return new NpgsqlConnection(connectionString);
