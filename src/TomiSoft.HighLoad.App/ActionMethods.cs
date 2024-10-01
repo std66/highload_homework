@@ -9,6 +9,9 @@ public static class ActionMethods {
     public static string Healthz() => "healthy";
 
     public static async Task<IResult> RegisterVehicle(RegisterVehicleRequestDto request, [FromServices] VehicleDataManager dataManager) {
+        if (!request.IsValid)
+            return Results.BadRequest();
+
         Guid id = await dataManager.RegisterVehicleAsync(request);
         return Results.Created($"/jarmuvek/{id}", null);
     }

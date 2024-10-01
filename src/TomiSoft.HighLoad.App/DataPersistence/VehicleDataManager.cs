@@ -81,17 +81,17 @@ public class VehicleDataManager {
         return vehicles;
     }
 
-    public async Task<int> GetCountOfVehiclesAsync() {
+    public async Task<long> GetCountOfVehiclesAsync() {
         await VerifyConnectionAsync();
 
         const string query = "SELECT COUNT(*) FROM jarmu";
         await using var command = new NpgsqlCommand(query, connection);
 
-        var count = (await command.ExecuteScalarAsync()) as int?;
+        var count = (await command.ExecuteScalarAsync());
 
         await connection.CloseAsync();
 
-        return count ?? 0;
+        return (long?)count ?? 0L;
     }
 
     private async Task VerifyConnectionAsync() {

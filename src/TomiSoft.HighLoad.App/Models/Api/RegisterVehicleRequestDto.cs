@@ -18,6 +18,16 @@ namespace TomiSoft.HighLoad.App.Models.Api {
     /// </summary>
     [DataContract]
     public partial class RegisterVehicleRequestDto : IEquatable<RegisterVehicleRequestDto> {
+        public bool IsValid {
+            get {
+                return
+                    !string.IsNullOrEmpty(Rendszam) && Rendszam.Length > 0 && Rendszam.Length <= 20 &&
+                    !string.IsNullOrEmpty(Tulajdonos) && Tulajdonos.Length > 0 && Tulajdonos.Length <= 200 &&
+                    Adatok is not null && Adatok.Count >= 0 && Adatok.Count <= 200 &&
+                    Adatok.All(x => !string.IsNullOrEmpty(x) && x.Length > 0 && x.Length <= 200);
+            }
+        }
+
         /// <summary>
         /// Vehicle license plate number
         /// </summary>
