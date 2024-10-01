@@ -113,7 +113,7 @@ public class VehicleDataManager {
             command.Parameters.AddWithValue("uuid", id);
             command.Parameters.AddWithValue("rendszam", registerRequest.Rendszam);
             command.Parameters.AddWithValue("tulajdonos", registerRequest.Tulajdonos);
-            command.Parameters.AddWithValue("forgalmi_ervenyes", registerRequest.ForgalmiErvenyes.HasValue ? (object)registerRequest.ForgalmiErvenyes.Value : DBNull.Value);
+            command.Parameters.AddWithValue("forgalmi_ervenyes", registerRequest.ForgalmiErvenyes.GetValueOrDefault());
 
             // SQL lekérdezés végrehajtása
             await command.ExecuteNonQueryAsync();
