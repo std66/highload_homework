@@ -5,15 +5,18 @@ using TomiSoft.HighLoad.App;
 using TomiSoft.HighLoad.App.DataPersistence;
 using TomiSoft.HighLoad.App.Models.Api;
 
+ThreadPool.SetMinThreads(300, 300);
+
 var builder = WebApplication.CreateSlimBuilder(args);
 
 builder.Services
     .AddLogging(x => x.AddSimpleConsole(options => options.SingleLine = true))
-    .AddScoped<NpgsqlConnection>(sp => {
+    .AddSingleton<NpgsqlConnection>(sp => {
         var connectionString = builder.Configuration.GetConnectionString("postgres");
         return new NpgsqlConnection(connectionString);
     })
     .AddScoped<VehicleDataManager>()
+    .AddTransient<IStartupFilter, PostgresInitializerStartupFilter>()
     .ConfigureHttpJsonOptions(options => {
         options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
     });
