@@ -24,6 +24,9 @@ app.Use(async (context, next) => {
     try {
         await next(context);
     }
+    catch (NpgsqlException e) when (e.SqlState is "23505") { //unique constraint violation error by duplicate key
+        context.Response.StatusCode = (int)HttpStatusCode.Conflict;
+    }
     catch (Exception e) {
         context.Response.Headers.ContentType = "application/json";
 
