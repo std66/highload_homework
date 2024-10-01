@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres
+    container_name: postgres
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db-init.sql:/docker-entrypoint-initdb.d/init.sql
+  app1:
+    image: std66/highload_homework
+    container_name: app1
+    environment:
+      - ASPNETCORE_HTTP_PORTS=10000
+    depends_on:
+      - postgres
+  app2:
+    image: std66/highload_homework
+    container_name: app2
+    environment:
+      - ASPNETCORE_HTTP_PORTS=10001
+    depends_on:
+      - postgres
+  app3:
+    image: std66/highload_homework
+    container_name: app3
+    environment:
+      - ASPNETCORE_HTTP_PORTS=10002
+    depends_on:
+      - postgres
+  envoy:
+    container_name: envoy
+    depends_on:
+      - app1
+      - app2
+      - app3
+    image: envoyproxy/envoy:v1.24-latest
+    ports:
+      - "80:80"
+      - "15000:15000"
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml

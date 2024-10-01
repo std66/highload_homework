@@ -20,7 +20,7 @@ RUN apt-get update \
     clang zlib1g-dev
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["TomiSoft.HighLoad.App/TomiSoft.HighLoad.App.csproj", "TomiSoft.HighLoad.App/"]
+COPY ["TomiSoft.HighLoad.App.csproj", "TomiSoft.HighLoad.App/"]
 RUN dotnet restore "./TomiSoft.HighLoad.App/TomiSoft.HighLoad.App.csproj"
 COPY . .
 WORKDIR "/src/TomiSoft.HighLoad.App"
