@@ -15,7 +15,13 @@ builder.Services
         var connectionString = builder.Configuration.GetConnectionString("postgres");
         return NpgsqlDataSource.Create(connectionString!);
     })
-    .AddScoped<VehicleDataManager>()
+    .AddSingleton<InMemoryCache>()
+    .AddScoped<VehicleDataManager>(
+        x => new CachingVehicleDataManager(
+            x.GetRequiredService<NpgsqlDataSource>(),
+            x.GetRequiredService<InMemoryCache>()
+        )
+    )
     .ConfigureHttpJsonOptions(options => {
         options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
     });

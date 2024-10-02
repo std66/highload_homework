@@ -12,8 +12,8 @@ public class VehicleDataManager {
         this.dataSource = dataSource;
     }
 
-    public async Task<Guid> RegisterVehicleAsync(RegisterVehicleRequestDto registerRequest) {
-        await using var connection = await VerifyConnectionAsync();
+    public virtual async Task<Guid> RegisterVehicleAsync(RegisterVehicleRequestDto registerRequest) {
+        await using var connection = await dataSource.OpenConnectionAsync();
 
         Guid id = Guid.NewGuid();
 
@@ -36,8 +36,8 @@ public class VehicleDataManager {
         return id;
     }
 
-    public async Task<SearchVehicleResultDto> SearchVehicle(string query) {
-        await using var connection = await VerifyConnectionAsync();
+    public virtual async Task<SearchVehicleResultDto> SearchVehicle(string query) {
+        await using var connection = await dataSource.OpenConnectionAsync();
 
         const string sqlQuery = @"
             SELECT 
@@ -77,23 +77,19 @@ public class VehicleDataManager {
         return vehicles;
     }
 
-    public async Task<long> GetCountOfVehiclesAsync() {
-        await using var connection = await VerifyConnectionAsync();
+    public virtual async Task<long> GetCountOfVehiclesAsync() {
+        await using var connection = await dataSource.OpenConnectionAsync();
 
         const string query = "SELECT COUNT(*) FROM jarmu";
         await using var command = new NpgsqlCommand(query, connection);
 
-        var count = (await command.ExecuteScalarAsync());
+        var count = await command.ExecuteScalarAsync();
 
         return (long?)count ?? 0L;
     }
 
-    private ValueTask<NpgsqlConnection> VerifyConnectionAsync() {
-        return dataSource.OpenConnectionAsync();
-    }
-
-    public async Task<RegisteredVehicleDto?> GetVehicleById(Guid id) {
-        await using var connection = await VerifyConnectionAsync();
+    public virtual async Task<RegisteredVehicleDto?> GetVehicleById(Guid id) {
+        await using var connection = await dataSource.OpenConnectionAsync();
 
         const string query = @"
             SELECT 

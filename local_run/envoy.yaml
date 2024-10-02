@@ -33,7 +33,7 @@ static_resources:
                         type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
   clusters:
     - name: service_cluster
-      connect_timeout: 5s
+      connect_timeout: 12s
       type: STRICT_DNS
       lb_policy: ROUND_ROBIN
       health_checks:
