@@ -6,14 +6,14 @@ using TomiSoft.HighLoad.App.Models.Api;
 namespace TomiSoft.HighLoad.App.DataPersistence;
 
 public class VehicleDataManager {
-    private readonly NpgsqlDataSource connection;
+    private readonly NpgsqlDataSource dataSource;
 
-    public VehicleDataManager(NpgsqlDataSource connection) {
-        this.connection = connection;
+    public VehicleDataManager(NpgsqlDataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     public async Task<Guid> RegisterVehicleAsync(RegisterVehicleRequestDto registerRequest) {
-        var connection = await VerifyConnectionAsync();
+        await using var connection = await VerifyConnectionAsync();
 
         Guid id = Guid.NewGuid();
 
@@ -33,13 +33,11 @@ public class VehicleDataManager {
             throw;
         }
 
-        await connection.CloseAsync();
-
         return id;
     }
 
     public async Task<SearchVehicleResultDto> SearchVehicle(string query) {
-        var connection = await VerifyConnectionAsync();
+        await using var connection = await VerifyConnectionAsync();
 
         const string sqlQuery = @"
             SELECT 
@@ -76,30 +74,26 @@ public class VehicleDataManager {
             vehicles.Add(vehicle);
         }
 
-        await connection.CloseAsync();
-
         return vehicles;
     }
 
     public async Task<long> GetCountOfVehiclesAsync() {
-        var connection = await VerifyConnectionAsync();
+        await using var connection = await VerifyConnectionAsync();
 
         const string query = "SELECT COUNT(*) FROM jarmu";
         await using var command = new NpgsqlCommand(query, connection);
 
         var count = (await command.ExecuteScalarAsync());
 
-        await connection.CloseAsync();
-
         return (long?)count ?? 0L;
     }
 
     private ValueTask<NpgsqlConnection> VerifyConnectionAsync() {
-        return connection.OpenConnectionAsync();
+        return dataSource.OpenConnectionAsync();
     }
 
     public async Task<RegisteredVehicleDto?> GetVehicleById(Guid id) {
-        var connection = await VerifyConnectionAsync();
+        await using var connection = await VerifyConnectionAsync();
 
         const string query = @"
             SELECT 
@@ -118,7 +112,6 @@ public class VehicleDataManager {
         await using var reader = await command.ExecuteReaderAsync();
 
         if (!await reader.ReadAsync()) {
-            await connection.CloseAsync();
             return null; // Nincs ilyen jármű
         }
 
@@ -129,8 +122,6 @@ public class VehicleDataManager {
             ForgalmiErvenyes = DateOnly.FromDateTime(reader.GetDateTime(3)),
             Adatok = JsonSerializer.Deserialize(reader.GetString(4), AppJsonSerializerContext.Default.ListString) ?? []
         };
-
-        await connection.CloseAsync();
 
         return registeredVehicle;
     }
@@ -159,13 +150,6 @@ public class VehicleDataManager {
     }
 
     private async Task InsertAdditionalData(NpgsqlConnection connection, RegisterVehicleRequestDto registerRequest, Guid id, NpgsqlTransaction transaction) {
-        //Rendszám és tulajdonos hozzáadása a táblához
-        List<string> newData = [
-            registerRequest.Rendszam,
-            registerRequest.Tulajdonos,
-            ..registerRequest.Adatok,
-        ];
-
         // Tömeges beszúrás előkészítése az Adatok lista alapján
         var insertVehicleDataSql = new StringBuilder();
         insertVehicleDataSql.Append("INSERT INTO adatok (uuid, adat) VALUES ");
@@ -173,13 +157,22 @@ public class VehicleDataManager {
         // Paraméterek hozzáadása az SQL lekérdezéshez
         var parameters = new List<NpgsqlParameter>();
 
-        for (int i = 0; i < newData.Count; i++) {
+        int i = 0;
+        for (; i < registerRequest.Adatok.Count; i++) {
             if (i > 0)
                 insertVehicleDataSql.Append(", "); // Több beszúrás esetén vesszővel elválasztva
 
             insertVehicleDataSql.Append($"(@id, @adat{i})");
-            parameters.Add(new NpgsqlParameter($"adat{i}", newData[i]));
+            parameters.Add(new NpgsqlParameter($"adat{i}", registerRequest.Adatok[i]));
         }
+
+        //rendszám beszúrása
+        insertVehicleDataSql.Append($",(@id, @adat{i}),");
+        parameters.Add(new NpgsqlParameter($"adat{i}", registerRequest.Rendszam));
+
+        //tulajdonos beszúrása
+        insertVehicleDataSql.Append($"(@id, @adat{i + 1})");
+        parameters.Add(new NpgsqlParameter($"adat{i + 1}", registerRequest.Tulajdonos));
 
         // vehicle_id paraméter hozzáadása
         parameters.Add(new NpgsqlParameter("id", id));
