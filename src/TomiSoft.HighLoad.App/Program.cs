@@ -11,12 +11,11 @@ var builder = WebApplication.CreateSlimBuilder(args);
 
 builder.Services
     .AddLogging(x => x.AddSimpleConsole(options => options.SingleLine = true))
-    .AddSingleton<NpgsqlConnection>(sp => {
+    .AddSingleton<NpgsqlDataSource>(sp => {
         var connectionString = builder.Configuration.GetConnectionString("postgres");
-        return new NpgsqlConnection(connectionString);
+        return NpgsqlDataSource.Create(connectionString!);
     })
     .AddScoped<VehicleDataManager>()
-    .AddTransient<IStartupFilter, PostgresInitializerStartupFilter>()
     .ConfigureHttpJsonOptions(options => {
         options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
     });

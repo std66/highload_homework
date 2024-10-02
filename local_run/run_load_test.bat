@@ -1,0 +1,1 @@
+java -jar .\high-load-stress-8.5.0.jar --endpoint "127.0.0.1:80" --dump

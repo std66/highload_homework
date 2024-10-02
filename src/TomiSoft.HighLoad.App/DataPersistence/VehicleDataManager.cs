@@ -6,14 +6,14 @@ using TomiSoft.HighLoad.App.Models.Api;
 namespace TomiSoft.HighLoad.App.DataPersistence;
 
 public class VehicleDataManager {
-    private readonly NpgsqlConnection connection;
+    private readonly NpgsqlDataSource connection;
 
-    public VehicleDataManager(NpgsqlConnection connection) {
+    public VehicleDataManager(NpgsqlDataSource connection) {
         this.connection = connection;
     }
 
     public async Task<Guid> RegisterVehicleAsync(RegisterVehicleRequestDto registerRequest) {
-        await VerifyConnectionAsync();
+        var connection = await VerifyConnectionAsync();
 
         Guid id = Guid.NewGuid();
 
@@ -21,8 +21,8 @@ public class VehicleDataManager {
         using var transaction = await connection.BeginTransactionAsync();
 
         try {
-            await InsertVehicleData(registerRequest, id, transaction);
-            await InsertAdditionalData(registerRequest, id, transaction);
+            await InsertVehicleData(connection, registerRequest, id, transaction);
+            await InsertAdditionalData(connection, registerRequest, id, transaction);
 
             // Tranzakció elkötelezése
             await transaction.CommitAsync();
@@ -39,7 +39,7 @@ public class VehicleDataManager {
     }
 
     public async Task<SearchVehicleResultDto> SearchVehicle(string query) {
-        await VerifyConnectionAsync();
+        var connection = await VerifyConnectionAsync();
 
         const string sqlQuery = @"
             SELECT 
@@ -82,7 +82,7 @@ public class VehicleDataManager {
     }
 
     public async Task<long> GetCountOfVehiclesAsync() {
-        await VerifyConnectionAsync();
+        var connection = await VerifyConnectionAsync();
 
         const string query = "SELECT COUNT(*) FROM jarmu";
         await using var command = new NpgsqlCommand(query, connection);
@@ -94,16 +94,12 @@ public class VehicleDataManager {
         return (long?)count ?? 0L;
     }
 
-    private async Task VerifyConnectionAsync() {
-        if (connection.State == System.Data.ConnectionState.Open) {
-            return;
-        }
-
-        await connection.OpenAsync();
+    private ValueTask<NpgsqlConnection> VerifyConnectionAsync() {
+        return connection.OpenConnectionAsync();
     }
 
     public async Task<RegisteredVehicleDto?> GetVehicleById(Guid id) {
-        await VerifyConnectionAsync();
+        var connection = await VerifyConnectionAsync();
 
         const string query = @"
             SELECT 
@@ -139,7 +135,7 @@ public class VehicleDataManager {
         return registeredVehicle;
     }
 
-    private async Task InsertVehicleData(RegisterVehicleRequestDto registerRequest, Guid id, NpgsqlTransaction transaction) {
+    private async Task InsertVehicleData(NpgsqlConnection connection, RegisterVehicleRequestDto registerRequest, Guid id, NpgsqlTransaction transaction) {
         // SQL lekérdezés
         const string sql = @"
             INSERT INTO 
@@ -162,7 +158,7 @@ public class VehicleDataManager {
         }
     }
 
-    private async Task InsertAdditionalData(RegisterVehicleRequestDto registerRequest, Guid id, NpgsqlTransaction transaction) {
+    private async Task InsertAdditionalData(NpgsqlConnection connection, RegisterVehicleRequestDto registerRequest, Guid id, NpgsqlTransaction transaction) {
         //Rendszám és tulajdonos hozzáadása a táblához
         List<string> newData = [
             registerRequest.Rendszam,
