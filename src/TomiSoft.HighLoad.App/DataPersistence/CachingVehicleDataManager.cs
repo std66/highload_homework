@@ -11,15 +11,15 @@ public class CachingVehicleDataManager : VehicleDataManager {
         this.memoryCache = memoryCache;
     }
 
-    public override async Task<Guid> RegisterVehicleAsync(RegisterVehicleRequestDto registerRequest) {
-        Guid id = await base.RegisterVehicleAsync(registerRequest);
+    public override async Task<Guid> RegisterVehicleAsync(RegisterVehicleRequestDto registerRequest, CancellationToken ct = default) {
+        Guid id = await base.RegisterVehicleAsync(registerRequest, ct);
 
         memoryCache.vehicleById.TryAdd(id, registerRequest);
 
         return id;
     }
 
-    public override async Task<RegisteredVehicleDto?> GetVehicleById(Guid id) {
+    public override async Task<RegisteredVehicleDto?> GetVehicleById(Guid id, CancellationToken ct = default) {
         bool cached = memoryCache.vehicleById.TryGetValue(id, out RegisterVehicleRequestDto? registerRequest);
 
         if (cached) {
@@ -32,7 +32,7 @@ public class CachingVehicleDataManager : VehicleDataManager {
             };
         }
 
-        RegisteredVehicleDto? dto = await base.GetVehicleById(id);
+        RegisteredVehicleDto? dto = await base.GetVehicleById(id, ct);
 
         if (!cached && dto is not null) {
             memoryCache.vehicleById.TryAdd(id, new RegisterVehicleRequestDto() {

@@ -1,4 +1,5 @@
 ﻿using Npgsql;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using TomiSoft.HighLoad.App.Models.Api;
@@ -12,32 +13,32 @@ public class VehicleDataManager {
         this.dataSource = dataSource;
     }
 
-    public virtual async Task<Guid> RegisterVehicleAsync(RegisterVehicleRequestDto registerRequest) {
-        await using var connection = await dataSource.OpenConnectionAsync();
+    public virtual async Task<Guid> RegisterVehicleAsync(RegisterVehicleRequestDto registerRequest, CancellationToken ct = default) {
+        await using var connection = await dataSource.OpenConnectionAsync(ct);
 
         Guid id = Guid.NewGuid();
 
         // Tranzakció használata
-        using var transaction = await connection.BeginTransactionAsync();
+        using var transaction = await connection.BeginTransactionAsync(ct);
 
         try {
-            await InsertVehicleData(connection, registerRequest, id, transaction);
-            await InsertAdditionalData(connection, registerRequest, id, transaction);
+            await InsertVehicleData(connection, registerRequest, id, transaction, ct);
+            await InsertAdditionalData(connection, registerRequest, id, transaction, ct);
 
             // Tranzakció elkötelezése
-            await transaction.CommitAsync();
+            await transaction.CommitAsync(ct);
         }
         catch {
             // Ha hiba lép fel, visszagörgetjük a tranzakciót
-            await transaction.RollbackAsync();
+            await transaction.RollbackAsync(ct);
             throw;
         }
 
         return id;
     }
 
-    public virtual async Task<SearchVehicleResultDto> SearchVehicle(string query) {
-        await using var connection = await dataSource.OpenConnectionAsync();
+    public virtual async IAsyncEnumerable<RegisteredVehicleDto> SearchVehicle(string query, [EnumeratorCancellation] CancellationToken ct = default) {
+        await using var connection = await dataSource.OpenConnectionAsync(ct);
 
         const string sqlQuery = @"
             SELECT 
@@ -58,38 +59,32 @@ public class VehicleDataManager {
         await using var command = new NpgsqlCommand(sqlQuery, connection);
         command.Parameters.AddWithValue("query", query);
 
-        var vehicles = new SearchVehicleResultDto();
+        await using var reader = await command.ExecuteReaderAsync(ct);
 
-        await using var reader = await command.ExecuteReaderAsync();
-
-        while (await reader.ReadAsync()) {
-            var vehicle = new RegisteredVehicleDto {
+        while (await reader.ReadAsync(ct)) {
+            yield return new RegisteredVehicleDto {
                 Uuid = reader.GetGuid(0),
                 Rendszam = reader.GetString(1),
                 Tulajdonos = reader.GetString(2),
                 ForgalmiErvenyes = DateOnly.FromDateTime(reader.GetDateTime(3)),
                 Adatok = JsonSerializer.Deserialize<List<string>>(reader.GetString(4), AppJsonSerializerContext.Default.ListString) ?? []
             };
-
-            vehicles.Add(vehicle);
         }
-
-        return vehicles;
     }
 
-    public virtual async Task<long> GetCountOfVehiclesAsync() {
-        await using var connection = await dataSource.OpenConnectionAsync();
+    public virtual async Task<long> GetCountOfVehiclesAsync(CancellationToken ct = default) {
+        await using var connection = await dataSource.OpenConnectionAsync(ct);
 
         const string query = "SELECT COUNT(*) FROM jarmu";
         await using var command = new NpgsqlCommand(query, connection);
 
-        var count = await command.ExecuteScalarAsync();
+        var count = await command.ExecuteScalarAsync(ct);
 
         return (long?)count ?? 0L;
     }
 
-    public virtual async Task<RegisteredVehicleDto?> GetVehicleById(Guid id) {
-        await using var connection = await dataSource.OpenConnectionAsync();
+    public virtual async Task<RegisteredVehicleDto?> GetVehicleById(Guid id, CancellationToken ct = default) {
+        await using var connection = await dataSource.OpenConnectionAsync(ct);
 
         const string query = @"
             SELECT 
@@ -105,9 +100,9 @@ public class VehicleDataManager {
         await using var command = new NpgsqlCommand(query, connection);
         command.Parameters.AddWithValue("uuid", id);
 
-        await using var reader = await command.ExecuteReaderAsync();
+        await using var reader = await command.ExecuteReaderAsync(ct);
 
-        if (!await reader.ReadAsync()) {
+        if (!await reader.ReadAsync(ct)) {
             return null; // Nincs ilyen jármű
         }
 
@@ -122,7 +117,7 @@ public class VehicleDataManager {
         return registeredVehicle;
     }
 
-    private async Task InsertVehicleData(NpgsqlConnection connection, RegisterVehicleRequestDto registerRequest, Guid id, NpgsqlTransaction transaction) {
+    private async Task InsertVehicleData(NpgsqlConnection connection, RegisterVehicleRequestDto registerRequest, Guid id, NpgsqlTransaction transaction, CancellationToken ct) {
         // SQL lekérdezés
         const string sql = @"
             INSERT INTO 
@@ -141,11 +136,11 @@ public class VehicleDataManager {
             command.Parameters.AddWithValue("eredeti_adatok", JsonSerializer.Serialize(registerRequest.Adatok, AppJsonSerializerContext.Default.ListString));
 
             // SQL lekérdezés végrehajtása
-            await command.ExecuteNonQueryAsync();
+            await command.ExecuteNonQueryAsync(ct);
         }
     }
 
-    private async Task InsertAdditionalData(NpgsqlConnection connection, RegisterVehicleRequestDto registerRequest, Guid id, NpgsqlTransaction transaction) {
+    private async Task InsertAdditionalData(NpgsqlConnection connection, RegisterVehicleRequestDto registerRequest, Guid id, NpgsqlTransaction transaction, CancellationToken ct) {
         // Tömeges beszúrás előkészítése az Adatok lista alapján
         var insertVehicleDataSql = new StringBuilder();
         insertVehicleDataSql.Append("INSERT INTO adatok (uuid, adat) VALUES ");
@@ -176,7 +171,7 @@ public class VehicleDataManager {
         // Lekérdezés végrehajtása
         using (var command = new NpgsqlCommand(insertVehicleDataSql.ToString(), connection, transaction)) {
             command.Parameters.AddRange(parameters.ToArray());
-            await command.ExecuteNonQueryAsync();
+            await command.ExecuteNonQueryAsync(ct);
         }
     }
 }
