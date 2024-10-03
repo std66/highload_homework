@@ -28,7 +28,7 @@ public static class ActionMethods {
         return Results.Ok(result);
     }
 
-    public static async Task<IResult> SearchVehicle([FromQuery, Required] string q, [FromServices] VehicleDataManager dataManager, CancellationToken ct = default) {
+    public static IResult SearchVehicle([FromQuery, Required] string q, [FromServices] VehicleDataManager dataManager, CancellationToken ct = default) {
         if (string.IsNullOrEmpty(q))
             return Results.BadRequest();
 
@@ -43,7 +43,7 @@ public static class ActionMethods {
                     await stream.WriteAsync(Encoding.UTF8.GetBytes(","), ct); // Vessző az elemek között
                 }
 
-                var json = JsonSerializer.Serialize(vehicle);
+                var json = JsonSerializer.Serialize(vehicle, AppJsonSerializerContext.Default.RegisteredVehicleDto);
                 var buffer = Encoding.UTF8.GetBytes(json);
                 await stream.WriteAsync(buffer, ct);
 
