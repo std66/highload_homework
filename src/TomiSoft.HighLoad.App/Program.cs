@@ -32,6 +32,9 @@ app.Use(async (context, next) => {
     try {
         await next(context);
     }
+    catch (Exception e) when (e.Message is "conflict") { //[CACHE] unique constraint violation error by duplicate key
+        context.Response.StatusCode = (int)HttpStatusCode.Conflict;
+    }
     catch (NpgsqlException e) when (e.SqlState is "23505") { //unique constraint violation error by duplicate key
         context.Response.StatusCode = (int)HttpStatusCode.Conflict;
     }

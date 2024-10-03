@@ -1,5 +1,4 @@
 ﻿using Npgsql;
-using System.Collections.Concurrent;
 using TomiSoft.HighLoad.App.Models.Api;
 
 namespace TomiSoft.HighLoad.App.DataPersistence;
@@ -12,9 +11,13 @@ public class CachingVehicleDataManager : VehicleDataManager {
     }
 
     public override async Task<Guid> RegisterVehicleAsync(RegisterVehicleRequestDto registerRequest, CancellationToken ct = default) {
+        if (memoryCache.rendszamok.Contains(registerRequest.Rendszam))
+            throw new Exception("conflict");
+
         Guid id = await base.RegisterVehicleAsync(registerRequest, ct);
 
         memoryCache.vehicleById.TryAdd(id, registerRequest);
+        memoryCache.rendszamok.Add(registerRequest.Rendszam);
 
         return id;
     }
@@ -22,7 +25,7 @@ public class CachingVehicleDataManager : VehicleDataManager {
     public override async Task<RegisteredVehicleDto?> GetVehicleById(Guid id, CancellationToken ct = default) {
         bool cached = memoryCache.vehicleById.TryGetValue(id, out RegisterVehicleRequestDto? registerRequest);
 
-        if (cached) {
+        if (cached && registerRequest is not null) {
             return new RegisteredVehicleDto() {
                 Uuid = id,
                 Adatok = registerRequest.Adatok,
@@ -41,6 +44,8 @@ public class CachingVehicleDataManager : VehicleDataManager {
                 Rendszam = dto.Rendszam,
                 Tulajdonos = dto.Tulajdonos
             });
+
+            memoryCache.rendszamok.Add(dto.Rendszam);
         }
 
         return dto;
@@ -48,5 +53,6 @@ public class CachingVehicleDataManager : VehicleDataManager {
 }
 
 public class InMemoryCache {
-    public readonly ConcurrentDictionary<Guid, RegisterVehicleRequestDto> vehicleById = new();
+    public readonly Dictionary<Guid, RegisterVehicleRequestDto> vehicleById = new();
+    public readonly HashSet<string> rendszamok = new();
 }
