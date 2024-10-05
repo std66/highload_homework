@@ -7,8 +7,12 @@ using TomiSoft.HighLoad.App.Models.Api;
 
 namespace TomiSoft.HighLoad.App;
 
+public class ActionMethod { }
+
 public static class ActionMethods {
-    public static string Healthz() => "healthy";
+    public static string Healthz() {
+        return "healthy";
+    }
 
     public static async Task<IResult> RegisterVehicle(RegisterVehicleRequestDto request, [FromServices] VehicleDataManager dataManager, CancellationToken ct = default) {
         if (!request.IsValid)
@@ -18,7 +22,9 @@ public static class ActionMethods {
         return Results.Created($"/jarmuvek/{id}", null);
     }
 
-    public static async Task<string> GetCountOfRegisteredVehicles([FromServices] VehicleDataManager dataManager, CancellationToken ct = default) => (await dataManager.GetCountOfVehiclesAsync(ct)).ToString();
+    public static async Task<string> GetCountOfRegisteredVehicles([FromServices] VehicleDataManager dataManager, CancellationToken ct = default) {
+        return (await dataManager.GetCountOfVehiclesAsync(ct)).ToString();
+    }
 
     public static async Task<IResult> GetVehicleById([Required] Guid uuid, [FromServices] VehicleDataManager dataManager, CancellationToken ct = default) {
         RegisteredVehicleDto? result = await dataManager.GetVehicleById(uuid, ct);

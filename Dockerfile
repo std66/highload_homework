@@ -21,4 +21,7 @@ RUN dotnet publish "TomiSoft.HighLoad.App.csproj" -c Release -r linux-x64 -o /ap
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["/app/TomiSoft.HighLoad.App"]
+COPY --from=publish /tools /tools
+RUN echo "./TomiSoft.HighLoad.App | tee ./log/log.jsonl" > ./run.sh
+RUN chmod a+x ./run.sh
+ENTRYPOINT ["sh", "./run.sh"]

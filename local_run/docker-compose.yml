@@ -17,6 +17,8 @@ services:
       - ASPNETCORE_HTTP_PORTS=10000
     depends_on:
       - postgres
+    volumes:
+      - ./app-log/app1:/app/log
   app2:
     image: std66/highload_homework
     container_name: app2
@@ -24,6 +26,8 @@ services:
       - ASPNETCORE_HTTP_PORTS=10001
     depends_on:
       - postgres
+    volumes:
+      - ./app-log/app2:/app/log
   app3:
     image: std66/highload_homework
     container_name: app3
@@ -31,6 +35,8 @@ services:
       - ASPNETCORE_HTTP_PORTS=10002
     depends_on:
       - postgres
+    volumes:
+      - ./app-log/app3:/app/log
   envoy:
     container_name: envoy
     depends_on:
