@@ -10,6 +10,11 @@ services:
       - "5432:5432"
     volumes:
       - ./db-init.sql:/docker-entrypoint-initdb.d/init.sql
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: '5GB'
   app1:
     image: std66/highload_homework
     container_name: app1
@@ -19,6 +24,11 @@ services:
       - postgres
     volumes:
       - ./app-log/app1:/app/log
+    deploy:
+      resources:
+        limits:
+          cpus: '0.6'
+          memory: '1GB'
   app2:
     image: std66/highload_homework
     container_name: app2
@@ -28,24 +38,24 @@ services:
       - postgres
     volumes:
       - ./app-log/app2:/app/log
-  app3:
-    image: std66/highload_homework
-    container_name: app3
-    environment:
-      - ASPNETCORE_HTTP_PORTS=10002
-    depends_on:
-      - postgres
-    volumes:
-      - ./app-log/app3:/app/log
+    deploy:
+      resources:
+        limits:
+          cpus: '0.6'
+          memory: '1GB'
   envoy:
     container_name: envoy
     depends_on:
       - app1
       - app2
-      - app3
     image: envoyproxy/envoy:v1.24-latest
     ports:
       - "80:80"
       - "15000:15000"
     volumes:
       - ./envoy.yaml:/etc/envoy/envoy.yaml
+    deploy:
+      resources:
+        limits:
+          cpus: '0.8'
+          memory: '1GB'

@@ -59,8 +59,3 @@ static_resources:
                     socket_address:
                       address: app2
                       port_value: 10001
-              - endpoint:
-                  address:
-                    socket_address:
-                      address: app3
-                      port_value: 10002
